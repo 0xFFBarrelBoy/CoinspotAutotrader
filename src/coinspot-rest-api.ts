@@ -13,30 +13,30 @@ interface coinspotPayload {
 
 export class CoinSpotRESTService {
     private fullAccessKey: string;
-    private secretKey: string; 
+    private secretKey: string;
 
-    private privateClient =  axios.create({
+    private privateClient = axios.create({
         baseURL: 'https://www.coinspot.com.au/api/v2',
         timeout: 1000
     });
 
-    private marketStateClient =  axios.create({
+    private marketStateClient = axios.create({
         baseURL: 'https://www.coinspot.com.au/pubapi/v2/latest',
         timeout: 10000
     });
 
-    constructor( fullAccessKey: string, secretKey: string) {  
+    constructor(fullAccessKey: string, secretKey: string) {
         this.fullAccessKey = fullAccessKey;
         this.secretKey = secretKey;
-    }  
+    }
 
-    private async sendRequest( client: AxiosInstance, apiPath: string, postData?:coinspotPayload){
+    private async sendRequest(client: AxiosInstance, apiPath: string, postData?: coinspotPayload) {
         let nonce = new Date().getTime();
 
-        let payload; 
-        if(!postData){
-            payload = {'nonce': nonce};
-        }else{
+        let payload;
+        if (!postData) {
+            payload = { 'nonce': nonce };
+        } else {
             payload = postData;
             payload['nonce'] = nonce;
         }
@@ -52,10 +52,10 @@ export class CoinSpotRESTService {
             'Content-Type': 'application/json',
             'User-Agent': 'Axios'
         };
-        return client.post(apiPath, {'nonce': nonce});
+        return client.post(apiPath, { 'nonce': nonce });
     }
 
-    async getCoinPrice(coinTicker : string){
+    async getCoinPrice(coinTicker: string) {
         return this.sendRequest(this.marketStateClient, "/latest/${coinTicker}", {});
     };
 
