@@ -1,44 +1,62 @@
-import {RestClient, IRestResponse} from 'typed-rest-client/RestClient';
+import axios from 'axios';
+import { AxiosInstance } from 'axios';
+import { createHmac } from 'crypto';
 
-interface CoinPrice {
-    bid: number;
-    ask: number;
-    last: number;
+const fetch = require('node-fetch');
+
+interface coinspotPayload {
+    'coin'?: string;
+    'amount'?: number;
+    'rate'?: number;
+    'nonce'?: number;
 }
 
 export class CoinSpotRESTService {
     private fullAccessKey: string;
-    private readOnlyKey: string; 
+    private secretKey: string; 
 
-    private readOnlyClient: RestClient;
-    private privateClient: RestClient;
+    private privateClient =  axios.create({
+        baseURL: 'https://www.coinspot.com.au/api/v2',
+        timeout: 1000
+    });
 
-    constructor( fullAccessKey: string, readOnlyKey: string) {  
+    private marketStateClient =  axios.create({
+        baseURL: 'https://www.coinspot.com.au/pubapi/v2/latest',
+        timeout: 10000
+    });
+
+    constructor( fullAccessKey: string, secretKey: string) {  
         this.fullAccessKey = fullAccessKey;
-        this.readOnlyKey = readOnlyKey;
-        this.readOnlyClient =  new RestClient(null, 'https://www.coinspot.com.au/pubapi/v2');
-        this.privateClient =  new RestClient(null, 'https://www.coinspot.com.au/api/v2');
+        this.secretKey = secretKey;
     }  
 
-    async getCoinPrice(coinTicker : string){
-        let res: IRestResponse<CoinPrice> = await this.readOnlyClient.get<CoinPrice>('/latest');
-        let value;
-        console.log(res);
-        if(res.statusCode == 200){
-            value = res.statusCode;
+    private async sendRequest( client: AxiosInstance, apiPath: string, postData?:coinspotPayload){
+        let nonce = new Date().getTime();
+
+        let payload; 
+        if(!postData){
+            payload = {'nonce': nonce};
         }else{
-            value = res;
+            payload = postData;
+            payload['nonce'] = nonce;
         }
-        return value;
+
+        let encrPayload = createHmac('sha512', this.secretKey);
+        encrPayload.update(JSON.stringify(payload));
+
+        let sign = encrPayload.digest('hex');
+
+        client.defaults.headers = {
+            'key': this.fullAccessKey,
+            'sign': sign,
+            'Content-Type': 'application/json',
+            'User-Agent': 'Axios'
+        };
+        return client.post(apiPath, {'nonce': nonce});
+    }
+
+    async getCoinPrice(coinTicker : string){
+        return this.sendRequest(this.marketStateClient, "/latest/${coinTicker}", {});
     };
-
-    getMarketValues(){
-
-    }
-
-    sellCoin( coinTicker: string, sellValue: number, sellAmount: number): boolean { 
-
-        return true;
-    }
 
 }
