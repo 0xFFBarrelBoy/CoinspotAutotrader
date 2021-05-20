@@ -1,11 +1,8 @@
 import axios from 'axios';
-import { AxiosInstance } from 'axios';
 import { createHmac } from 'crypto';
 
-const fetch = require('node-fetch');
-
 interface coinspotPayload {
-    'coin'?: string;
+    'cointype'?: string;
     'amount'?: number;
     'rate'?: number;
     'nonce'?: number;
@@ -21,7 +18,7 @@ export class CoinSpotRESTService {
     });
 
     private marketStateClient = axios.create({
-        baseURL: 'https://www.coinspot.com.au/pubapi/v2/latest',
+        baseURL: 'https://www.coinspot.com.au/pubapi/v2',
         timeout: 10000
     });
 
@@ -30,7 +27,7 @@ export class CoinSpotRESTService {
         this.secretKey = secretKey;
     }
 
-    private async sendRequest(client: AxiosInstance, apiPath: string, postData?: coinspotPayload) {
+    private async sendPostRequest(apiPath: string, postData?: coinspotPayload) {
         let nonce = new Date().getTime();
 
         let payload;
@@ -46,17 +43,41 @@ export class CoinSpotRESTService {
 
         let sign = encrPayload.digest('hex');
 
-        client.defaults.headers = {
+        this.privateClient.defaults.headers = {
             'key': this.fullAccessKey,
             'sign': sign,
             'Content-Type': 'application/json',
             'User-Agent': 'Axios'
         };
-        return client.post(apiPath, { 'nonce': nonce });
+        return this.privateClient.post(apiPath, postData);
+    }
+
+    private async sendGetRequest(apiPath: string) {
+
+        this.marketStateClient.defaults.headers = {
+            'Content-Type': 'application/json',
+            'User-Agent': 'Axios'
+        };
+
+        return await this.marketStateClient.get(apiPath);
     }
 
     async getCoinPrice(coinTicker: string) {
-        return this.sendRequest(this.marketStateClient, "/latest/${coinTicker}", {});
+        let res = await this.sendGetRequest('/latest/' + coinTicker);
+        return res.data.last;
+    };
+
+    async getCoinLatestBuyPrice(coinTicker: string) {
+        return this.sendGetRequest('/latest/buyprice/' + coinTicker);
+    };
+
+    async getCoinLatestSellPrice(coinTicker: string) {
+        return this.sendGetRequest('/latest/sellprice/' + coinTicker);
+    };
+
+    async getMarketPrices() {
+        let res = await this.sendGetRequest('/latest');
+        return res.data.prices;
     };
 
 }
