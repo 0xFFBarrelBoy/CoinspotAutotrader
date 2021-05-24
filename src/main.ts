@@ -1,8 +1,8 @@
-import { CoinSpotRESTService } from "./coinspot-rest-api";
+import { CoinSpotRESTService } from "./CoinSpotRESTService";
 
-let restClient = new CoinSpotRESTService('ACCESS KEY', 'SECRET KEY');
-
+let restClient = new CoinSpotRESTService('', '');
 
 restClient.getMarketPrices().then(marketTable => {
     console.log(marketTable);
-})
+});
+

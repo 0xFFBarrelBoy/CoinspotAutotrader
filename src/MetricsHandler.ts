@@ -1,5 +1,5 @@
 export class MetricsHandler {
-    public ticker: string;
+    public coinTicker: string;
     public average: number;
     public percentDelta: number;
     public lastPrice: number;
@@ -9,7 +9,7 @@ export class MetricsHandler {
     private iter: number;
 
     constructor(coinTicker: string, scale: number) {
-        this.ticker = coinTicker;
+        this.coinTicker = coinTicker;
         this.scale = scale;
         this.prices = Array<number>(scale).fill(0);
         this.iter = 0;
