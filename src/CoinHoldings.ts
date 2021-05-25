@@ -1,17 +1,37 @@
 export class CoinHoldings {
-    public coinTicker: string;
-    public averageBuy: number | undefined;
-    public units: number | undefined;
+    private averageBuy: number;
+    private units: number;
+    private cost: number;
 
-    constructor(coinTicker: string) {
-        this.coinTicker = coinTicker;
+    constructor() {
+        this.averageBuy = 0;
+        this.units = 0;
+        this.cost = 0;
     }
 
-    addPurchase(averageBuy: number, units: number) {
-        this.averageBuy = averageBuy;
-        this.units = units;
+    addPurchase(buyPrice: number, parcelUnits: number): number {
+        this.averageBuy = ((buyPrice * parcelUnits) + (this.units * this.averageBuy)) / (this.units + parcelUnits);
+        this.cost += buyPrice * parcelUnits;
+        this.units += parcelUnits;
+        return this.units;
     }
 
-    //TODO: Add in ability to have multiple purchases 
+    sellHoldings(sellPrice: number, sellUnits: number): number {
+        this.cost -= sellPrice * sellUnits;
+        this.units -= sellUnits;
+        return this.units;
+    }
+
+    getHeldUnits(): number {
+        return this.units;
+    }
+
+    getCost(): number {
+        return this.cost;
+    }
+
+    getAvgBuy(): number {
+        return this.averageBuy
+    }
 
 }
